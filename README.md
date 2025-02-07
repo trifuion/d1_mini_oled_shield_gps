@@ -5,7 +5,7 @@ This project displays GPS data (speed, altitude, satellites) on an OLED screen a
 ## Hardware Components
 - **Development Board**: ESP8266 ESP-12F CH340G V2 (WeMos D1 Mini)
 - **GPS Module**: NEO-6M GPS Module (GY-NEO6MV2)
-- **OLED Display**: 0.96" I2C SSD1306 OLED (128x64)
+- **OLED Display**: 0.66" I2C OLED (64x48)
 
 ## Libraries Required
 - **Adafruit_SSD1306**: Library for controlling the SSD1306 OLED display.
