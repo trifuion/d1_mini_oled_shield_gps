@@ -3,7 +3,7 @@
 // ------------------------------------------
 // Development Board: ESP8266 ESP-12F CH340G V2 (WeMos D1 Mini)
 // GPS Module: NEO-6M GPS Module (GY-NEO6MV2)
-// OLED Display: 0.96" I2C SSD1306 OLED (128x64)
+// OLED Display: 0.66" I2C OLED (64x48)
 // ==========================================
 
 #include <Wire.h>
@@ -12,8 +12,8 @@
 #include <SoftwareSerial.h>
 
 // OLED Display Configuration
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+#define SCREEN_WIDTH 64
+#define SCREEN_HEIGHT 48
 #define OLED_RESET -1
 #define SCREEN_ADDRESS 0x3C  // I2C address for OLED screen
 
@@ -59,19 +59,33 @@ void loop() {
     newData = false;
     print_gps_data();
   } else {
+    // No new GPS data received, show "No GPS Signal"
     display.clearDisplay();
-    display.setCursor(0, 0);
-    display.setTextSize(2);
     display.setTextColor(WHITE);
-    display.println("No");
-    display.println("Data");
-    display.display();
+    // Set text size and calculate width of each line using getTextBounds()
+    display.setTextSize(2);  // Text size for the first line
+    int16_t x1, y1;
+    uint16_t textWidth1, textHeight1;
+    display.getTextBounds(" NO", 0, 0, &x1, &y1, &textWidth1, &textHeight1);
+    display.setTextSize(2);  // Text size for the second line
+    int16_t x2, y2;
+    uint16_t textWidth2, textHeight2;
+    display.getTextBounds("GPS", 0, 0, &x2, &y2, &textWidth2, &textHeight2);
+    // Calculate x positions for centering the text
+    int centerX1 = (SCREEN_WIDTH - textWidth1) / 2; // For " NO"
+    int centerX2 = (SCREEN_WIDTH - textWidth2) / 2; // For "GPS"
+    // Set the cursor to center the text
+    display.setCursor(centerX1, 0);
+    display.println(" NO");
+    display.setCursor(centerX2, 24);  // Adjust y position for the second line
+    display.println("GPS");
+    display.display();  // Update the display
     Serial.println("No GPS data received.");
   }
 }
 
 void print_gps_data() {
-  display.clearDisplay();
+  display.clearDisplay();  // Clear the display before showing new data
   display.setTextColor(WHITE);
 
   if (gps.location.isValid()) {
@@ -125,7 +139,7 @@ void print_gps_data() {
       display.print("Time: Invalid");
     }
 
-    display.display();
+    display.display();  // Update display with GPS data
 
     // Print GPS data to Serial Monitor
     Serial.print("\rLat: ");
@@ -145,7 +159,6 @@ void print_gps_data() {
     Serial.print("/");
     Serial.print(gps.date.year());
     Serial.print(" | Time: ");
-    // Use the same time adjustment for Serial output
     int serialHour = gps.time.hour() + 2;
     if (serialHour >= 24) serialHour -= 24;
     if (isDST(gps.date.year(), gps.date.month(), gps.date.day())) {
@@ -157,8 +170,7 @@ void print_gps_data() {
     Serial.print(gps.time.minute());
     Serial.print(":");
     Serial.print(gps.time.second());
-    Serial.println("      ");  // Extra spaces to clear previous characters
-
+    Serial.println("      ");
   } else {
     Serial.println("GPS data is invalid.");
   }
