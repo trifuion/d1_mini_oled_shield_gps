@@ -95,18 +95,24 @@ void print_gps_data() {
     display.print("ALT: ");
     display.print(gps.altitude.meters(), 0);
 
-    // Print Time (adjusted for Bucharest DST)
+    // Print Time (adjusted for Bucharest time zone and DST)
     display.setCursor(0, 40);
     if (gps.time.isValid()) {
       int hour = gps.time.hour();
       int minute = gps.time.minute();
       int second = gps.time.second();
 
-      // Adjust time for DST if applicable
+      // Adjust for Bucharest base time (UTC+2)
+      hour += 2;
+      if (hour >= 24) {
+        hour -= 24;
+      }
+
+      // Then adjust for DST if applicable (adds +1 hour to UTC+2 to become UTC+3)
       if (isDST(gps.date.year(), gps.date.month(), gps.date.day())) {
-        hour += 1;  // Add 1 hour for DST (EEST)
+        hour += 1;
         if (hour >= 24) {
-          hour = 0;  // Reset hour to 0 if it exceeds 23
+          hour -= 24;
         }
       }
 
@@ -139,7 +145,14 @@ void print_gps_data() {
     Serial.print("/");
     Serial.print(gps.date.year());
     Serial.print(" | Time: ");
-    Serial.print(gps.time.hour());
+    // Use the same time adjustment for Serial output
+    int serialHour = gps.time.hour() + 2;
+    if (serialHour >= 24) serialHour -= 24;
+    if (isDST(gps.date.year(), gps.date.month(), gps.date.day())) {
+      serialHour += 1;
+      if (serialHour >= 24) serialHour -= 24;
+    }
+    Serial.print(serialHour);
     Serial.print(":");
     Serial.print(gps.time.minute());
     Serial.print(":");
@@ -157,14 +170,13 @@ bool isDST(int year, int month, int day) {
   int dstEndDay = getLastSunday(DST_END_MONTH, year);
 
   if (month > DST_START_MONTH && month < DST_END_MONTH) {
-    return true;  // DST is active
+    return true;
   } else if (month == DST_START_MONTH && day >= dstStartDay) {
-    return true;  // DST started after last Sunday of March
+    return true;
   } else if (month == DST_END_MONTH && day <= dstEndDay) {
-    return true;  // DST ends before last Sunday of October
+    return true;
   }
-
-  return false;  // DST is not active
+  return false;
 }
 
 // Function to calculate the last Sunday of a month
@@ -175,12 +187,13 @@ int getLastSunday(int month, int year) {
       return day;
     }
   }
-  return 31;  // Default fallback if not found
+  return 31;
 }
 
 // Function to get the number of days in a given month
 int getDaysInMonth(int month, int year) {
-  if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) {
+  if (month == 1 || month == 3 || month == 5 || month == 7 ||
+      month == 8 || month == 10 || month == 12) {
     return 31;
   } else if (month == 4 || month == 6 || month == 9 || month == 11) {
     return 30;
