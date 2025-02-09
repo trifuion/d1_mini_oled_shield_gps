@@ -172,6 +172,27 @@ void print_gps_data() {
     Serial.print(gps.time.second());
     Serial.println("      ");
   } else {
+     // No new GPS data received, show "No GPS Signal"
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    // Set text size and calculate width of each line using getTextBounds()
+    display.setTextSize(2);  // Text size for the first line
+    int16_t x1, y1;
+    uint16_t textWidth1, textHeight1;
+    display.getTextBounds(" NO", 0, 0, &x1, &y1, &textWidth1, &textHeight1);
+    display.setTextSize(2);  // Text size for the second line
+    int16_t x2, y2;
+    uint16_t textWidth2, textHeight2;
+    display.getTextBounds("GPS", 0, 0, &x2, &y2, &textWidth2, &textHeight2);
+    // Calculate x positions for centering the text
+    int centerX1 = (SCREEN_WIDTH - textWidth1) / 2; // For " NO"
+    int centerX2 = (SCREEN_WIDTH - textWidth2) / 2; // For "GPS"
+    // Set the cursor to center the text
+    display.setCursor(centerX1, 0);
+    display.println(" NO");
+    display.setCursor(centerX2, 24);  // Adjust y position for the second line
+    display.println("GPS");
+    display.display();  // Update the display
     Serial.println("GPS data is invalid.");
   }
 }
